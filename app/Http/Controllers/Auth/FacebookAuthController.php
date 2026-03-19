@@ -35,6 +35,7 @@ class FacebookAuthController extends Controller
         $user = User::create([
             'name' => $facebookUser->getName() ?? 'Facebook User',
             'email' => $email, // can be null
+            'role' => 'user',
             'facebook_id' => $facebookUser->getId(),
             'password' => bcrypt(Str::random(32)), // random password
         ]);

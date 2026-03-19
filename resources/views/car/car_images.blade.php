@@ -1,4 +1,4 @@
-<x-app-layout bodyClass="page-my-cars">
+<x-app-layout bodyClass="page-my-cars" :role="$role">
     {{-- Success Message --}}
     <x-success-message />
     <x-error-message />
@@ -15,7 +15,7 @@
                         @csrf
                         @method('PUT')
                         <div class="table-responsive">
-                            <table class="table">
+                            <table>
                                 <thead>
                                     <tr>
                                         <th>Delete</th>

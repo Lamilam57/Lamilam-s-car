@@ -6,11 +6,14 @@ use App\Models\Car;
 use App\Models\CarFeatures;
 use App\Models\CarImage;
 use App\Models\CarType;
+use App\Models\CarView;
 use App\Models\City;
 use App\Models\FuelType;
 use App\Models\Maker;
 use App\Models\Model;
+use App\Models\Review;
 use App\Models\State;
+use App\Models\Subscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,13 +29,17 @@ class CarController extends Controller
      */
     public function index()
     {
+        // dd(Auth::user()->role);
         $cars = auth()->user()
         ->cars()
         ->with(['primaryImage', 'maker', 'model'])
         ->orderBy('created_at', 'desc')
         ->paginate(15);
 
-        return view('car.index', ['cars' => $cars]);
+        return view('car.index', [
+            'role' => Auth::user()->role,
+            'cars' => $cars, 
+        ]);
     }
 
     /**
@@ -42,11 +49,15 @@ class CarController extends Controller
      */
     public function create()
     {
+        $oldData = session('car_form_data');
+
         return view('car.create', [
+            'role' => Auth::user()->role,
             'makers' => Maker::orderBy('name')->get(),
             'carTypes' => CarType::all(),
             'fuelTypes' => FuelType::all(),
             'states' => State::all(),
+            'oldCarData' => $oldData
         ]);
     }
 
@@ -57,6 +68,23 @@ class CarController extends Controller
      */
     public function store(Request $request)
     {
+        
+        $subscription = Subscription::where('user_id', auth()->id())
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->first();
+
+       
+        if (!$subscription) {
+
+            $data = $request->except('images');
+
+            session()->put('car_form_data', $data);
+
+            return redirect()
+                ->route('subscription.page')
+                ->with('error', 'You must subscribe before posting a car.');
+        }
         // 1. Validation
         $request->validate([
             'maker_id' => 'required|exists:makers,id',
@@ -142,7 +170,8 @@ class CarController extends Controller
                     'position' => $index + 1,
                 ]);
             }
-// dd('images inserted');
+            // dd('images inserted');
+            session()->forget('car_form_data');
             
             return redirect()
             ->route('car.create')
@@ -187,7 +216,34 @@ class CarController extends Controller
      */
     public function show(Car $car)
     {
-        return view('car.show', ['car' => $car]);
+        $user = Auth::user();
+        $ownerId = $car->user_id;
+        if ($user && $user->role==='user' && $user->id !==$ownerId){
+            CarView::updateOrCreate(
+                ['car_id' => $car->id, 'owner_id'=>$ownerId, 'user_id' => $user->id],
+                ['views' =>\DB::raw('views + 1')]
+            );
+
+        }
+        else{
+            CarView::updateOrCreate(
+                ['car_id' => $car->id, 'owner_id'=>$ownerId, 'user_id' => null],
+                ['views' =>\DB::raw('views + 1')]
+            );
+
+        }
+        $totalClicks = CarView::whereNotNull('user_id')
+        ->where('car_id', $car->id)
+        ->sum('views');
+
+        $reviews = Review::with('user')
+            ->where('car_id', $car->id)
+            ->latest()
+            ->get();
+
+        
+
+        return view('car.show', ['car' => $car, 'role' => Auth::user()->role, 'totalClicks'=> $totalClicks,'reviews' => $reviews, 'user' => $user]);
     }
 
     /**
@@ -211,6 +267,7 @@ class CarController extends Controller
         $cities = City::all();
 
         return view('car.edit', [
+            'role' => Auth::user()->role,
             'car' => $car,
             'makers' => Maker::all(),
             'models' => $models,
@@ -372,6 +429,7 @@ class CarController extends Controller
         }
 
         return view('car.search', [
+            'role' => Auth::user()->role,
             'cars' => $cars,
             'makers' => Maker::all(),
             'models' => Model::all(),
@@ -388,6 +446,6 @@ class CarController extends Controller
             ->with(['car.primaryImage', 'car.city', 'car.carType', 'car.fuelType', 'car.maker', 'car.model'])
             ->paginate(15);
 
-        return view('car.watchList', compact('cars'));
+        return view('car.watchList', compact('cars'), ['role' => Auth::user()->role,]);
     }
 }

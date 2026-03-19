@@ -26,6 +26,7 @@ class UserFactory extends Factory
             'phone' => fake()->numerify('###########'),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'role' => fake()->randomElement(['admin', 'admin', 'admin','user']),
             'remember_token' => Str::random(10),
         ];
     }

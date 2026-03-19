@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :role="$role">
     <main>
         <div class="container-small">
             <h1 class="car-details-page-title">Edit Car</h1>
@@ -68,7 +68,7 @@
                             <div class="row">
                                 @foreach ($carTypes as $type)
                                     <div class="col">
-                                        <label class="inline-radio">
+                                        <label class="feature-checkbox">
                                             <input type="radio" name="car_type_id" value="{{ $type->id }}"
                                                 @checked(old('car_type_id', $car->car_type_id) == $type->id)>
                                             {{ $type->name }}
@@ -109,7 +109,7 @@
                             <div class="row">
                                 @foreach ($fuelTypes as $fuel)
                                     <div class="col">
-                                        <label class="inline-radio">
+                                        <label class="feature-checkbox">
                                             <input type="radio" name="fuel_type_id" value="{{ $fuel->id }}"
                                                 @checked(old('fuel_type_id', $car->fuel_type_id) == $fuel->id)>
                                             {{ $fuel->name }}
@@ -168,42 +168,35 @@
                             </div>
                         </div>
 
+                        @php
+
+                            $features = [
+                                'air_conditioning' => 'Air Conditioning',
+                                'power_windows' => 'Power Windows',
+                                'power_door_locks' => 'Power Door Locks',
+                                'abs' => 'ABS',
+                                'cruise_control' => 'Cruise Control',
+                                'bluetooth_connectivity' => 'Bluetooth Connectivity',
+                                'remote_start' => 'Remote Start',
+                                'gps_navigation' => 'GPS Navigation',
+                                'heater_seats' => 'Heated Seats',
+                                'climate_control' => 'Climate Control',
+                                'rear_parking_sensor' => 'Rear Parking Sensors',
+                                'leather_seats' => 'Leather Seats',
+                            ];
+
+                        @endphp
                         {{-- FEATURES --}}
                         <div class="form-group" id="car_features">
-                            <div class="row">
-                                <div class="col">
-                                    @foreach ([
-        'air_conditioning' => 'Air Conditioning',
-        'power_windows' => 'Power Windows',
-        'power_door_locks' => 'Power Door Locks',
-        'abs' => 'ABS',
-        'cruise_control' => 'Cruise Control',
-        'bluetooth_connectivity' => 'Bluetooth Connectivity',
-    ] as $name => $label)
-                                        <label class="checkbox">
+                            <label>Car Features</label>
+                            <div class="features-grid">
+                                    @foreach ($features as $name => $label)
+                                        <label class="feature-checkbox">
                                             <input type="checkbox" name="{{ $name }}" value="1"
                                                 @checked(old($name, optional($car->features)->$name))>
                                             {{ $label }}
                                         </label>
                                     @endforeach
-                                </div>
-
-                                <div class="col">
-                                    @foreach ([
-        'remote_start' => 'Remote Start',
-        'gps_navigation' => 'GPS Navigation System',
-        'heater_seats' => 'Heated Seats',
-        'climate_control' => 'Climate Control',
-        'rear_parking_sensor' => 'Rear Parking Sensors',
-        'leather_seats' => 'Leather Seats',
-    ] as $name => $label)
-                                        <label class="checkbox">
-                                            <input type="checkbox" name="{{ $name }}" value="1"
-                                                @checked(old($name, optional($car->features)->$name))>
-                                            {{ $label }}
-                                        </label>
-                                    @endforeach
-                                </div>
                             </div>
                         </div>
 
@@ -215,9 +208,9 @@
 
                         {{-- PUBLISHED --}}
                         <div class="form-group">
-                            <label class="checkbox">
+                            <label class="feature-checkbox">
                                 <input type="checkbox" name="published" value="1" @checked(old('published', $car->published_at))>
-                                Published
+                                <span>Published</span>
                             </label>
                         </div>
                     </div>

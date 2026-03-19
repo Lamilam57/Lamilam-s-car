@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Car;
 use App\Models\CarImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 // use App\Models\CarImage;
@@ -21,7 +22,7 @@ class CarImagesController extends Controller
             'model',
         ]);
 
-        return view('car.car_images', compact('car'));
+        return view('car.car_images', compact('car'), ['role' => Auth::user()->role]);
     }
 
     /**

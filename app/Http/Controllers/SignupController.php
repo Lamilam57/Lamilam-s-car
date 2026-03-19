@@ -28,6 +28,7 @@ class SignupController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'phone' => $validated['phone'],
+            'role' => 'user',
             'google_id' => $validated['google_id'] ?? null,
             'facebook_id' => $validated['facebook_id'] ?? null,
         ]);

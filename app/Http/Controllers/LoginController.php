@@ -10,6 +10,7 @@ class LoginController extends Controller
     public function create(){
         return view('auth.login');
     }
+
     public function postLogin(Request $request){
         $credentials = $request->validate([
             'email' => ['required', 'email'],
@@ -18,12 +19,25 @@ class LoginController extends Controller
 
         $remember = $request->has('remember');
 
-        if(Auth::attempt($credentials, $remember)){
+        if (Auth::attempt($credentials, $remember)) {
             $request->session()->regenerate();
 
-            return redirect()
+            $user = Auth::user(); // Get logged in user
+
+            // ✅ Role-based redirect
+            if ($user->role === 'admin') {
+                return redirect()->intended('admin')
+                    ->with('success', 'Welcome Admin!');
+            }
+
+            if ($user->role === 'user') {
+                return redirect()
                 ->intended('car')
                 ->with('success', 'Login successful. Welcome back!');
+            }
+
+            // fallback if role is unknown
+            return redirect('/')->with('success', 'Login successful!');
         }
 
         return back()->withErrors([

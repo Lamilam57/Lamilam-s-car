@@ -114,4 +114,13 @@ class Car extends Model
     {
         return $this->hasMany(FavouriteCar::class);
     }
+
+    public function views(){
+        return $this->hasMany(CarView::class);
+    }
+    
+    public function reviews()
+{
+    return $this->hasMany(Review::class);
+}
 }

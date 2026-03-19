@@ -1,6 +1,7 @@
-<x-app-layout bodyClass="page-my-cars">
-    {{-- Success Message --}}
+<x-app-layout bodyClass="page-my-cars" :role="$role">
+    {{-- Messages --}}
     <x-success-message />
+    <x-error-message />
     <main>
         <div>
             <div class="container">
@@ -17,7 +18,7 @@
                 </div>
                 <div class="card p-medium">
                     <div class="table-responsive">
-                        <table class="table">
+                        <table>
                             <thead>
                                 <tr>
                                     <th>Image</th>
@@ -31,7 +32,9 @@
                                 @forelse ($cars as $car)
                                     <tr>
                                         <td>
-                                            <x-car-image :car="$car" class="my-cars-img-thumbnail" />
+                                            <a href="{{ route('car.show', $car) }}">
+                                                <x-car-image :car="$car" class="my-cars-img-thumbnail" />
+                                            </a>
                                         </td>
                                         <td>{{ $car->year }} - {{ $car->maker->name }} {{ $car->model->name }}</td>
                                         <td>{{ $car->getCreatedDate() }}</td>

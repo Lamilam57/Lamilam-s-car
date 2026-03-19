@@ -23,8 +23,20 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                $user = Auth::user();
+                if ($user->role==='admin') {
+                    return redirect()->route('admin.index');
+                }
+                if ($user->role==='user') {
+                    return redirect()->route('car.index');
+                }
                 // return redirect(RouteServiceProvider::HOME);
-                return redirect()->route('car.index');
+                Auth::logout();
+
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return redirect('/');
             }
         }
 

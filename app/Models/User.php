@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Subscription;
+use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +13,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
     // public $timestamps = false;
@@ -24,9 +27,15 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'image',
+        'state_id',
+        'city_id',
+        'address',
         'google_id',
         'facebook_id',
         'password',
+        'role',
+        'email_verified_at'
     ];
 
     /**
@@ -48,6 +57,16 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new VerifyEmailNotification());
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
     public function favouriteCars(): HasMany
 {
     return $this->hasMany(FavouriteCar::class);
@@ -55,5 +74,19 @@ class User extends Authenticatable
     
     public function cars(): HasMany {
         return $this->hasMany(Car::class);
-    }    
+    } 
+    
+    public function carViews()
+    {
+        return $this->hasMany(CarView::class);
+    }
+    
+    public function activeSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('expires_at', '>', now())
+            ->where('status', 'active');
+    }
+
+    
 }

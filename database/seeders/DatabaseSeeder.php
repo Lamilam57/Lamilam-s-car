@@ -16,6 +16,7 @@ use App\Models\State;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -422,9 +423,10 @@ class DatabaseSeeder extends Seeder
                 ->create();
         }
 
-        User::factory()
-            ->count(2)
-            ->create();
+        User::factory()->count(2)->create([
+            'role' => 'admin',
+            'password' => Hash::make('test1234'),
+        ]);
 
         // User::factory()
         //     ->count(2)
@@ -478,7 +480,9 @@ class DatabaseSeeder extends Seeder
         // Create 5 users
         User::factory()
             ->count(3)
-            ->create()
+            ->create([
+            'role' => 'user',
+            'password' => Hash::make('test1234'),])
             ->each(function ($owner) {
                 // Create 50 cars for each user
                 Car::factory()

@@ -6,7 +6,7 @@
     $toYears = range($currentYear, $startYear);
 
 @endphp
-<x-app-layout>
+<x-app-layout :role="$role">
     <main>
         <!-- Found Cars -->
         <section>

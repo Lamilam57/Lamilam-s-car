@@ -1,4 +1,6 @@
-<x-app-layout>
+<x-app-layout :role="$role">
+    <x-success-message />
+    <x-error-message />
     <main>
         <div class="container">
             <h1 class="car-details-page-title">{{ $car->maker->name }} {{ $car->model->name }} - {{ $car->year }}</h1>
@@ -79,6 +81,113 @@
                             </x-car-specification>
                         </ul>
                     </div>
+                    <div class="card car-detailed-description">
+                        <h2 class="car-details-title">Car Review</h2>
+                        <p class="page-subtitle">See what users are saying about this car</p>
+                        {{-- Reviews List --}}
+                        <div class="card reviews-list">
+
+                            <h4 class="mb-4">User Reviews</h4>
+
+                            @forelse ($reviews as $review)
+
+                                <div class="review-card">
+
+                                    <div class="review-header">
+
+                                        <div class="review-user">
+
+                                            <x-user-image :user="$review->user" class="my-cars-img-thumbnail" />
+
+                                            <div>
+                                                <strong>{{ $review->user->name }}</strong>
+                                                <p class="review-date">
+                                                    {{ $review->created_at->diffForHumans() }}
+                                                </p>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="review-rating">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                @if ($i <= $review->rating)
+                                                    ⭐
+                                                @else
+                                                    ☆
+                                                @endif
+                                            @endfor
+                                        </div>
+
+                                    </div>
+
+                                    <div class="review-body">
+                                        {{ $review->review }}
+                                    </div>
+
+                                </div>
+
+                            @empty
+
+                                <div class="no-review">
+                                    No reviews yet.
+                                </div>
+
+                            @endforelse
+
+                        </div>
+
+                        {{-- Add Review --}}
+                        @if ($role === 'user' && $user->id !== $car->user_id)
+                            <div class="card review-form-card mb-5">
+                                <div class="card-body">
+
+                                    <h4 class="card-title mb-3">Leave a Review</h4>
+
+                                    <form method="POST" action="{{ route('reviews.store', $car) }}">
+                                        @csrf
+
+                                        <input type="hidden" name="car_id" value="{{ $car->id }}">
+
+                                        {{-- Rating --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">Rating</label>
+
+                                            <select name="rating" class="form-control" required>
+                                                <option value="">Select Rating</option>
+                                                <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                                                <option value="4">⭐⭐⭐⭐ Good</option>
+                                                <option value="3">⭐⭐⭐ Average</option>
+                                                <option value="2">⭐⭐ Poor</option>
+                                                <option value="1">⭐ Very Poor</option>
+                                            </select>
+
+                                            @error('rating')
+                                                <p class="error-message">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        {{-- Comment --}}
+                                        <div class="mb-3">
+                                            <label class="form-label">Comment</label>
+
+                                            <textarea name="review" rows="4" class="form-control" placeholder="Write your experience with this car..."
+                                                required></textarea>
+
+                                            @error('comment')
+                                                <p class="error-message">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+
+                                        <button class="btn btn-primary">
+                                            Submit Review
+                                        </button>
+
+                                    </form>
+
+                                </div>
+                            </div>
+                        @endif
+                    </div>
                 </div>
                 <div class="car-details card">
                     <div class="flex items-center justify-between">
@@ -109,6 +218,12 @@
                                 <th>Mileage</th>
                                 <td>{{ $car->mileage }}</td>
                             </tr>
+                            @if ($role === 'admin' || $role === 'user')
+                                <tr>
+                                    <th>Number of Views</th>
+                                    <td>{{ $totalClicks ?? 0 }}</td>
+                                </tr>
+                            @endif
                             <tr>
                                 <th>Car Type</th>
                                 <td>{{ $car->carType->name }}</td>
@@ -119,7 +234,21 @@
                             </tr>
                             <tr>
                                 <th>Address</th>
-                                <td>{{ $car->address }}</td>
+                                <td>
+                                    <span class="short-text">
+                                        {{ Str::words($car->address, 2, '...') }}
+                                    </span>
+
+                                    @if (str_word_count($car->address) > 2)
+                                        <span class="full-text hidden">
+                                            {{ $car->address }}
+                                        </span>
+
+                                        <a onclick="toggleAddress(this)" style="display: block">
+                                            More
+                                        </a>
+                                    @endif
+                                </td>
                             </tr>
 
                         </tbody>
@@ -146,8 +275,25 @@
                         <span class="toggle-text car-details-phone-view">view full number</span>
                     </a>
                 </div>
+
             </div>
         </div>
     </main>
+    <script>
+        function toggleAddress(button) {
+            const td = button.closest('td');
+            const shortText = td.querySelector('.short-text');
+            const fullText = td.querySelector('.full-text');
 
+            if (fullText.classList.contains('hidden')) {
+                fullText.classList.remove('hidden');
+                shortText.style.display = 'none';
+                button.innerText = 'Less';
+            } else {
+                fullText.classList.add('hidden');
+                shortText.style.display = 'block';
+                button.innerText = 'More';
+            }
+        }
+    </script>
 </x-app-layout>

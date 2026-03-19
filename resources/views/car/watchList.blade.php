@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :role="$role">
     <main>
         <section>
             <div class="container mx-auto px-4">
@@ -14,8 +14,8 @@
                 @if ($cars->isEmpty())
                     <div style="padding: 40px; font-size: 22px; font-weight: 600;"
                         class="text-center py-20 text-gray-500 text-xl">
-                        You don't have cars yet.
-                        <a href="{{ route('car.create') }}" class="text-blue-600 underline">Add new car</a>
+                        Search for cars. 
+                        <a href="{{ route('car.search') }}" class="text-blue-600 underline">Add to favourite</a>
                     </div>
                 @else
                     <div class="car-items-listing">

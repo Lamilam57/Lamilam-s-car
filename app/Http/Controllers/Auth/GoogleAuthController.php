@@ -26,8 +26,10 @@ class GoogleAuthController extends Controller
             $user = User::create([
                 'name' => $googleUser->getName(),
                 'email' => $googleUser->getEmail(),
+                'role' => 'user',
                 'google_id' => $googleUser->getId(),
                 'password' => bcrypt(Str::random(24)), // fallback
+                'email_verified_at' => now(),
             ]);
         } else {
             // attach google id if email already exists

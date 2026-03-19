@@ -1,4 +1,4 @@
-<x-app-layout title="Home Page">
+<x-app-layout title="Home Page" :role="$role">
     <!-- Home Slider -->
     <section class="hero-slider">
         <!-- Carousel wrapper -->
@@ -8,17 +8,15 @@
                 <div class="container">
                     <div class="slide-content">
                         <h1 class="hero-slider-title">
-                            Buy <strong>The Best Cars</strong> <br />
-                            in your region
+                            Buy <strong>Your Perfect Car</strong>
                         </h1>
                         <div class="hero-slider-content">
                             <p>
-                                Use powerful search tool to find your desired cars based on
-                                multiple search criteria: Maker, Model, Year, Price Range, Car
-                                Type, etc...
+                                Browse thousands of vehicles and filter by make, model, year, price range, body type, and more
+                                to quickly discover the car that fits your needs.
                             </p>
 
-                            <button class="btn btn-hero-slider">Find the car</button>
+                            <a href="{{ route('car.search') }}" class="btn btn-hero-slider">Find the car</a>
                         </div>
                     </div>
                     <div class="slide-image">
@@ -40,7 +38,7 @@
                                 upload photos and the perfect buyer will find it...
                             </p>
 
-                            <button class="btn btn-hero-slider">Add Your Car</button>
+                            <a href="{{ route('car.create') }}" class="btn btn-hero-slider">Add Your Car</a>
                         </div>
                     </div>
                     <div class="slide-image">
@@ -70,13 +68,12 @@
 
     <main>
         <x-search-form
-    :models="$models"
-    :makers="$makers"
-    :carTypes="$carTypes"
-    :fuelTypes="$fuelTypes"
-    :states="$states"
-/>
-
+            :models="$models"
+            :makers="$makers"
+            :carTypes="$carTypes"
+            :fuelTypes="$fuelTypes"
+            :states="$states"
+        />
 
         <!-- New Cars -->
         <section>

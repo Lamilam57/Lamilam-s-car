@@ -43,4 +43,11 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
+    'paystack' => [
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+    ],
+    'rapidapi' => [
+        'key' => env('RAPIDAPI_KEY'),
+    ],
 ];

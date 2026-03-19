@@ -24,4 +24,9 @@ class City extends Model
     public function cars(): HasMany {
         return $this->hasMany(Car::class);
     }
+
+//     public function users()
+// {
+//     return $this->hasMany(User::class);
+// }
 }
