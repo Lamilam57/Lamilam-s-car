@@ -1,77 +1,40 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
-# -----------------------------
-# 1. Install system dependencies
-# -----------------------------
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    unzip \
-    zip \
-    libpq-dev \
-    libonig-dev \
-    libzip-dev \
-    libjpeg62-turbo-dev \
-    libpng-dev \
-    libfreetype6-dev \
+    git curl unzip zip \
+    libpq-dev libonig-dev libzip-dev \
+    libjpeg62-turbo-dev libpng-dev libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# -----------------------------
-# 2. Install PHP extensions
-# -----------------------------
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    mbstring \
-    zip
+# Enable Apache rewrite
+RUN a2enmod rewrite
 
-# Install GD properly (image processing)
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql mbstring zip
+
+# Install GD
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd
 
-# -----------------------------
-# 3. Install Composer
-# -----------------------------
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# -----------------------------
-# 4. Set working directory
-# -----------------------------
-WORKDIR /var/www
+WORKDIR /var/www/html
 
-# -----------------------------
-# 5. Copy composer files first (cache optimization)
-# -----------------------------
-COPY composer.json composer.lock ./
-
-RUN composer install --no-dev --optimize-autoloader --no-scripts
-
-# -----------------------------
-# 6. Copy application files
-# -----------------------------
+# Copy project
 COPY . .
 
-# -----------------------------
-# 7. Laravel setup
-# -----------------------------
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# Generate app key (only if not already set)
-RUN php artisan key:generate || true
+# Set Laravel public folder
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
 
-# Set correct permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+# Permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Optimize Laravel for production
-#RUN php artisan config:cache && \
-    #php artisan route:cache && \
-    #php artisan view:cache
+# Expose dynamic port
+EXPOSE 80
 
-# -----------------------------
-# 8. Expose port (for php-fpm)
-# -----------------------------
-EXPOSE 9000
-
-# -----------------------------
-# 9. Start PHP-FPM
-# -----------------------------
-CMD ["php-fpm"]
+CMD ["apache2-foreground"]
