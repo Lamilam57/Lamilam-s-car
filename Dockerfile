@@ -62,9 +62,9 @@ RUN php artisan key:generate || true
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Optimize Laravel for production
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+#RUN php artisan config:cache && \
+    #php artisan route:cache && \
+    #php artisan view:cache
 
 # -----------------------------
 # 8. Expose port (for php-fpm)
