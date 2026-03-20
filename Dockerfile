@@ -1,40 +1,61 @@
+# Use Apache + PHP 8.2
 FROM php:8.2-apache
 
-# Install dependencies
+# -----------------------------
+# 1. System dependencies
+# -----------------------------
 RUN apt-get update && apt-get install -y \
     git curl unzip zip \
     libpq-dev libonig-dev libzip-dev \
     libjpeg62-turbo-dev libpng-dev libfreetype6-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache rewrite
+# -----------------------------
+# 2. Enable Apache rewrite
+# -----------------------------
 RUN a2enmod rewrite
 
-# Install PHP extensions
+# -----------------------------
+# 3. PHP extensions
+# -----------------------------
 RUN docker-php-ext-install pdo pdo_mysql mbstring zip
 
-# Install GD
+# Install GD for image processing
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd
 
-# Install Composer
+# -----------------------------
+# 4. Install Composer
+# -----------------------------
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# -----------------------------
+# 5. Set working directory
+# -----------------------------
 WORKDIR /var/www/html
 
-# Copy project
+# -----------------------------
+# 6. Copy project
+# -----------------------------
 COPY . .
 
-# Install dependencies
+# -----------------------------
+# 7. Install PHP dependencies
+# -----------------------------
 RUN composer install --no-dev --optimize-autoloader
 
-# Set Laravel public folder
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+# -----------------------------
+# 8. Permissions
+# -----------------------------
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# -----------------------------
+# 9. Expose port for Render
+# -----------------------------
+ENV PORT=10000
+EXPOSE 10000
 
-# Expose dynamic port
-EXPOSE 80
-
+# -----------------------------
+# 10. Start Apache
+# -----------------------------
 CMD ["apache2-foreground"]
