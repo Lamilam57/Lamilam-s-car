@@ -13,7 +13,7 @@ php artisan key:generate || true
 # Run migrations (force in production)
 php artisan migrate --force || true
 
-# Clear caches safely
+# Clear caches
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
@@ -21,5 +21,5 @@ php artisan view:clear
 # Fix permissions
 chown -R www-data:www-data storage bootstrap/cache
 
-# Start Apache in foreground
+# Start Apache
 apache2-foreground
