@@ -1,8 +1,8 @@
-# Use Apache + PHP 8.2
+# Use PHP 8.2 with Apache
 FROM php:8.2-apache
 
 # -----------------------------
-# 1. System dependencies
+# 1. Install system dependencies
 # -----------------------------
 RUN apt-get update && apt-get install -y \
     git curl unzip zip \
@@ -11,12 +11,12 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
-# 2. Enable Apache rewrite
+# 2. Enable Apache rewrite module
 # -----------------------------
 RUN a2enmod rewrite
 
 # -----------------------------
-# 3. PHP extensions
+# 3. Install PHP extensions
 # -----------------------------
 RUN docker-php-ext-install pdo pdo_mysql mbstring zip
 
@@ -34,12 +34,8 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # -----------------------------
 WORKDIR /var/www/html
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-CMD ["/entrypoint.sh"]
-
 # -----------------------------
-# 6. Copy project
+# 6. Copy project files
 # -----------------------------
 COPY . .
 
@@ -49,17 +45,28 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # -----------------------------
-# 8. Permissions
+# 8. Copy entrypoint and set executable
+# -----------------------------
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# -----------------------------
+# 9. Copy custom Apache config
+# -----------------------------
+COPY apache.conf /etc/apache2/sites-available/000-default.conf
+
+# -----------------------------
+# 10. Fix permissions
 # -----------------------------
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 # -----------------------------
-# 9. Expose port for Render
+# 11. Expose HTTP port
 # -----------------------------
 ENV PORT=10000
 EXPOSE 10000
 
 # -----------------------------
-# 10. Start Apache
+# 12. Start container via entrypoint
 # -----------------------------
-CMD ["apache2-foreground"]
+CMD ["/entrypoint.sh"]
