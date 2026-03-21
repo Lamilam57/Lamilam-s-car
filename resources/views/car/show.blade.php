@@ -35,7 +35,7 @@
                     <div class="card car-detailed-description">
                         <h2 class="car-details-title">Detailed Description</h2>
                         <p>
-                            {!! $car->description !!}
+                            {!! $car->description??"No description for this car" !!}
                         </p>
                     </div>
 
