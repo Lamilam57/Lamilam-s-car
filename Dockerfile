@@ -45,6 +45,7 @@ COPY . .
 # -----------------------------
 # 7. Install PHP dependencies
 # -----------------------------
+RUN composer clear-cache
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # -----------------------------
