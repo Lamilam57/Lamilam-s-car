@@ -1,75 +1,60 @@
-# Use PHP 8.2 with Apache
-FROM php:8.2-apache
+# -----------------------------
+# Stage 1: Build PHP dependencies
+# -----------------------------
+FROM php:8.2-cli AS build
 
-# Memory for Composer
 ENV COMPOSER_MEMORY_LIMIT=-1
-ENV PORT=10000
 
-# -----------------------------
-# 1. Install system dependencies
-# -----------------------------
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl unzip zip \
-    libpq-dev libonig-dev libzip-dev \
-    libjpeg62-turbo-dev libpng-dev libfreetype6-dev \
-    libcurl4-openssl-dev \
+    git curl unzip zip libzip-dev libonig-dev \
+    libjpeg62-turbo-dev libpng-dev libfreetype6-dev libcurl4-openssl-dev \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd \
     && rm -rf /var/lib/apt/lists/*
 
-# -----------------------------
-# 2. Enable Apache rewrite module
-# -----------------------------
-RUN a2enmod rewrite
-
-# -----------------------------
-# 3. Install PHP extensions
-# -----------------------------
-RUN docker-php-ext-install pdo pdo_mysql mbstring zip gd curl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd
-
-# -----------------------------
-# 4. Install Composer
-# -----------------------------
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# -----------------------------
-# 5. Set working directory
-# -----------------------------
-WORKDIR /var/www/html
+WORKDIR /app
 
-# -----------------------------
-# 6. Copy project files
-# -----------------------------
-COPY . .
+# Copy only composer files first (to leverage Docker cache)
+COPY composer.json composer.lock ./
 
-# -----------------------------
-# 7. Install PHP dependencies
-# -----------------------------
-RUN composer clear-cache
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # -----------------------------
-# 8. Copy entrypoint and set executable
+# Stage 2: Final Apache image
 # -----------------------------
+FROM php:8.2-apache
+
+ENV PORT=10000
+
+# Enable Apache rewrite
+RUN a2enmod rewrite
+
+WORKDIR /var/www/html
+
+# Copy Laravel app files
+COPY . .
+
+# Copy vendor from build stage
+COPY --from=build /app/vendor ./vendor
+
+# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# -----------------------------
-# 9. Copy custom Apache config
-# -----------------------------
+# Copy Apache config
 COPY apache.conf /etc/apache2/sites-available/000-default.conf
 
-# -----------------------------
-# 10. Fix permissions
-# -----------------------------
+# Fix permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# -----------------------------
-# 11. Expose HTTP port for Render
-# -----------------------------
+# Expose Render port
 EXPOSE 10000
 
-# -----------------------------
-# 12. Start container via entrypoint
-# -----------------------------
+# Start container
 CMD ["/entrypoint.sh"]
