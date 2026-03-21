@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
 
 class CarController extends Controller
 {
@@ -98,8 +99,8 @@ class CarController extends Controller
             'city_id' => 'required|exists:cities,id',
             'fuel_type_id' => 'required|exists:fuel_types,id',
             'description' => 'nullable|string',
-            'images' => 'required|array|min:1|max:20',
-            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'images' => 'required|array|min:1|max:10',
+            'images.*' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
         $createdCar = null;
@@ -151,25 +152,37 @@ class CarController extends Controller
             $createdFeatures = CarFeatures::create($featuresData);
 // dd('features created');
             // 4. Store Images
+            $cloudinary = new Cloudinary([
+            'cloud' => [
+                    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                    'api_key'    => env('CLOUDINARY_API_KEY'),
+                    'api_secret' => env('CLOUDINARY_API_SECRET'),
+                ],
+                'url' => [
+                    'secure' => true
+                ]
+            ]);
+            
             foreach ($request->file('images') as $index => $image) {
-                if ($index >= 20) {
+
+                if ($index >= 10) {
                     break;
                 }
-
-                $path = $image->store('cars', 'public');
-
-                if (! $path) {
-                    throw new \Exception('Failed to store image: '.$image->getClientOriginalName());
-                }
-
-                $storedImages[] = $path;
-
+            
+                $uploadResult = $cloudinary->uploadApi()->upload(
+                    $image->getRealPath(),
+                    ['folder' => 'cars']
+                );
+            
+                $imageUrl = $uploadResult['secure_url'];
+            
                 CarImage::create([
                     'car_id' => $createdCar->id,
-                    'image_path' => $path,
+                    'image_path' => $imageUrl,
                     'position' => $index + 1,
                 ]);
             }
+        
             // dd('images inserted');
             session()->forget('car_form_data');
             
