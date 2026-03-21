@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Cloudinary\Cloudinary;
 
 class HomeController extends Controller
 {
@@ -78,25 +79,38 @@ public function update(Request $request)
         ],
     ]);
 
-    // ✅ Handle Image Upload (if exists)
-    if ($request->hasFile('image')) {
+    $cloudinary = new Cloudinary([
+    'cloud' => [
+        'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+        'api_key'    => env('CLOUDINARY_API_KEY'),
+        'api_secret' => env('CLOUDINARY_API_SECRET'),
+    ],
+    'url' => ['secure' => true]
+]);
 
-        $file = $request->file('image');
+// Delete old image from Cloudinary
+if ($user->image && str_starts_with($user->image, 'https')) {
+    try {
+        $parts = explode('/', $user->image);
+        $filename = end($parts);
+        $publicId = 'profile/' . pathinfo($filename, PATHINFO_FILENAME);
 
-        // Delete old image
-        if ($user->image && Storage::disk('public')->exists('profile/' . $user->image)) {
-            Storage::disk('public')->delete('profile/' . $user->image);
-        }
-
-        // Generate unique filename
-        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-
-        // Store file
-        $file->storeAs('profile', $filename, 'public');
-
-        // Add to validated data
-        $validated['image'] = $filename;
+        $cloudinary->uploadApi()->destroy($publicId);
+    } catch (\Exception $e) {
+        // optional: log error
     }
+}
+
+// Upload new image
+$uploadResult = $cloudinary->uploadApi()->upload(
+    $file->getRealPath(),
+    ['folder' => 'profile']
+);
+
+$imageUrl = $uploadResult['secure_url'];
+
+// Save URL instead of filename
+$validated['image'] = $imageUrl;
 
     // ✅ Single update
     $user->update($validated);
