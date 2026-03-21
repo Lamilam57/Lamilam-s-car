@@ -7,6 +7,7 @@ use App\Models\CarImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Cloudinary\Cloudinary;
 
 // use App\Models\CarImage;
 
@@ -37,20 +38,50 @@ class CarImagesController extends Controller
         | DELETE SELECTED IMAGES
         |------------------------------------------------------------
         */
+
         if ($request->filled('delete_images')) {
+        
+            $cloudinary = new Cloudinary([
+                'cloud' => [
+                    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                    'api_key'    => env('CLOUDINARY_API_KEY'),
+                    'api_secret' => env('CLOUDINARY_API_SECRET'),
+                ],
+                'url' => ['secure' => true]
+            ]);
+        
             $images = CarImage::where('car_id', $car->id)
                 ->whereIn('id', $request->delete_images)
                 ->get();
-
+        
             foreach ($images as $image) {
-                if (
+        
+                // ✅ If it's a Cloudinary image
+                if ($image->image_path && str_starts_with($image->image_path, 'https')) {
+        
+                    try {
+                        // Extract public_id from URL
+                        $parts = explode('/', $image->image_path);
+                        $filename = end($parts);
+                        $publicId = 'cars/' . pathinfo($filename, PATHINFO_FILENAME);
+        
+                        // Delete from Cloudinary
+                        $cloudinary->uploadApi()->destroy($publicId);
+        
+                    } catch (\Exception $e) {
+                        // Optional: log error
+                    }
+                }
+        
+                // ✅ If it's local image (fallback)
+                elseif (
                     $image->image_path &&
-                    ! str_starts_with($image->image_path, 'https') &&
                     Storage::disk('public')->exists($image->image_path)
                 ) {
                     Storage::disk('public')->delete($image->image_path);
                 }
-
+        
+                // Delete DB record
                 $image->delete();
             }
         }
@@ -85,32 +116,41 @@ class CarImagesController extends Controller
 
         $existingCount = $car->images()->count();
 
-        if ($existingCount >= 20) {
+        if ($existingCount >= 10) {
             return back()->withErrors([
                 'error' => 'You can upload a maximum of 20 images per car.',
             ]);
         }
+         $cloudinary = new Cloudinary([
+                'cloud' => [
+                    'cloud_name' => env('CLOUDINARY_CLOUD_NAME'),
+                    'api_key'    => env('CLOUDINARY_API_KEY'),
+                    'api_secret' => env('CLOUDINARY_API_SECRET'),
+                ],
+                'url' => ['secure' => true]
+            ]);
+        
 
         $position = $existingCount + 1;
 
-        foreach ($request->file('images') as $image) {
-            if ($position > 21) {
+        foreach ($request->file('images') as $index => $image) {
+
+            if ($index >= 10) {
                 break;
             }
-
-            $path = $image->store('cars', 'public');
-
-            if (! $path) {
-                continue;
-            }
-
+        
+            $uploadResult = $cloudinary->uploadApi()->upload(
+                $image->getRealPath(),
+                ['folder' => 'cars']
+            );
+        
+            $imageUrl = $uploadResult['secure_url'];
+        
             CarImage::create([
-                'car_id' => $car->id,
-                'image_path' => $path,
-                'position' => $position,
+                'car_id' => $createdCar->id,
+                'image_path' => $imageUrl,
+                'position' => $index + 1,
             ]);
-
-            $position++;
         }
 
         return back()->with('success', 'Images added successfully.');
