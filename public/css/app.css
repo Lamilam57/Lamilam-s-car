@@ -2402,6 +2402,11 @@ input[type="file"] {
 
 @media (max-width:480px) {
 
+  .feature-checkbox,
+  .form-group {
+    width: 90%;
+  }
+    
   .feedback-container {
     padding: 20px 12px;
   }
