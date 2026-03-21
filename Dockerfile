@@ -1,7 +1,9 @@
+# Use PHP 8.2 with Apache
 FROM php:8.2-apache
 
 # Memory for Composer
 ENV COMPOSER_MEMORY_LIMIT=-1
+ENV PORT=10000
 
 # -----------------------------
 # 1. Install system dependencies
@@ -64,7 +66,6 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 # -----------------------------
 # 11. Expose HTTP port for Render
 # -----------------------------
-ENV PORT=10000
 EXPOSE 10000
 
 # -----------------------------
