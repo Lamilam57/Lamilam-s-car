@@ -67,13 +67,13 @@
                             <x-car-specification :value="$car->features->gps_navigation">
                                 GPS Navigation System
                             </x-car-specification>
-                            <x-car-specification :value="$car->features->heated_seats">
+                            <x-car-specification :value="$car->features->heater_seats">
                                 Heated Seats
                             </x-car-specification>
                             <x-car-specification :value="$car->features->climate_control">
                                 Climate Control
                             </x-car-specification>
-                            <x-car-specification :value="$car->features->rear_parking_sensors">
+                            <x-car-specification :value="$car->features->rear_parking_sensor">
                                 Rear Parking Sensors
                             </x-car-specification>
                             <x-car-specification :value="$car->features->leather_seats">
