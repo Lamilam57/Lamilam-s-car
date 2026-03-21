@@ -50,10 +50,12 @@
 
         <button class="btn btn-primary btn-login w-full">Login</button>
 
-        <div class="grid grid-cols-2 gap-1 social-auth-buttons">
-            <!-- <x-facebook-btn/> -->
+        <div class="gap-1 social-auth-buttons">    
             <x-google-btn/>
-        </div>
+        </div>    
+        <!-- <div class="grid grid-cols-2 gap-1 social-auth-buttons">
+            <x-facebook-btn/> 
+        </div> -->
 
         <div class="login-text-dont-have-account">
             Don't have an account? -
