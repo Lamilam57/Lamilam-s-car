@@ -1,25 +1,19 @@
-#!/bin/sh
+#!/bin/bash
 
-echo "Starting Laravel setup..."
+# -----------------------------
+# 1. Set Apache port dynamically (Render)
+# -----------------------------
+sed -i "s/80/${PORT}/g" /etc/apache2/ports.conf
 
-# If .env does not exist, copy example
-if [ ! -f .env ]; then
-    cp .env.example .env
-fi
+# -----------------------------
+# 2. Run migrations & clear caches
+# -----------------------------
+php artisan migrate --force
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 
-# Generate application key if missing
-php artisan key:generate || true
-
-# Run migrations (force in production)
-php artisan migrate --force || true
-
-# Clear caches
-php artisan config:clear
-php artisan route:clear
-php artisan view:clear
-
-# Fix permissions
-chown -R www-data:www-data storage bootstrap/cache
-
-# Start Apache
-apache2-foreground
+# -----------------------------
+# 3. Start Apache in foreground
+# -----------------------------
+apachectl -D FOREGROUND
