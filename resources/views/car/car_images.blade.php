@@ -32,7 +32,11 @@
                                             </td>
 
                                             <td>
-                                                <img src="{{ str_starts_with($image->image_path, 'https') ? $image->image_path : asset('storage/' . $image->image_path) }}"
+                                                <img src="{{ $image && $image->image_path
+                                                    ? (str_starts_with($image->image_path, 'https') 
+                                                        ? $image->image_path 
+                                                        : asset('storage/' . $image->image_path))
+                                                    : asset('img/car-png-39071.png') }}"
                                                     class="my-cars-img-thumbnail"
                                                     style="width:120px;height:80px;object-fit:cover;">
                                             </td>
