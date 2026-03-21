@@ -1,3 +1,5 @@
+ENV COMPOSER_MEMORY_LIMIT=-1
+
 # Use PHP 8.2 with Apache
 FROM php:8.2-apache
 
