@@ -51,7 +51,7 @@
         <button class="btn btn-primary btn-login w-full">Login</button>
 
         <div class="grid grid-cols-2 gap-1 social-auth-buttons">
-            <x-facebook-btn/>
+            <!-- <x-facebook-btn/> -->
             <x-google-btn/>
         </div>
 
