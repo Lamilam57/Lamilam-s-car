@@ -1,5 +1,7 @@
-# Use PHP 8.2 with Apache
 FROM php:8.2-apache
+
+# Memory for Composer
+ENV COMPOSER_MEMORY_LIMIT=-1
 
 # -----------------------------
 # 1. Install system dependencies
@@ -8,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     git curl unzip zip \
     libpq-dev libonig-dev libzip-dev \
     libjpeg62-turbo-dev libpng-dev libfreetype6-dev \
+    libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # -----------------------------
@@ -18,10 +21,8 @@ RUN a2enmod rewrite
 # -----------------------------
 # 3. Install PHP extensions
 # -----------------------------
-RUN docker-php-ext-install pdo pdo_mysql mbstring zip
-
-# Install GD for image processing
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+RUN docker-php-ext-install pdo pdo_mysql mbstring zip gd curl \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd
 
 # -----------------------------
@@ -42,7 +43,7 @@ COPY . .
 # -----------------------------
 # 7. Install PHP dependencies
 # -----------------------------
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
 # -----------------------------
 # 8. Copy entrypoint and set executable
@@ -61,7 +62,7 @@ COPY apache.conf /etc/apache2/sites-available/000-default.conf
 RUN chown -R www-data:www-data storage bootstrap/cache
 
 # -----------------------------
-# 11. Expose HTTP port
+# 11. Expose HTTP port for Render
 # -----------------------------
 ENV PORT=10000
 EXPOSE 10000
